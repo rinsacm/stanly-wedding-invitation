@@ -12,6 +12,20 @@ export default async function handler(req, res) {
 
   try {
     const client = getConvexClient();
+    // Check for existing RSVP by email to avoid duplicates
+    const all = await client.query("getRsvps");
+    const existing = (all || []).find(
+      (r) => (r.email || "").toLowerCase() === (email || "").toLowerCase(),
+    );
+    if (existing) {
+      return res
+        .status(409)
+        .json({
+          error: "RSVP already received",
+          id: existing._id || existing.id || null,
+        });
+    }
+
     const result = await client.mutation("addRsvp", {
       name,
       email,
@@ -19,6 +33,7 @@ export default async function handler(req, res) {
       message: message || "",
       attending: !!attending,
     });
+
     return res.status(201).json({ id: result?.id || null });
   } catch (err) {
     console.error("Failed to write RSVP (Convex)", err);
