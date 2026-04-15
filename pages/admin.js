@@ -1,57 +1,82 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function AdminRsvps() {
+  const [password, setPassword] = useState("");
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetch("/api/rsvps", {
+  const fetchData = async () => {
+    setError("");
+
+    const res = await fetch("/api/admin/rsvps", {
       headers: {
-        "x-admin-password": "YOUR_PASSWORD",
+        "x-admin-password": password,
       },
-    })
-      .then((res) => res.json())
-      .then(setData);
-  }, []);
+    });
 
-  if (!data) return <p className="text-center mt-10">Loading...</p>;
+    const json = await res.json();
 
+    if (!res.ok) {
+      setError(json.error || "Failed");
+      return;
+    }
+
+    setData(json);
+  };
+
+  // 🔐 LOGIN UI (shown first)
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-gray-100">
+        <div className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg w-full max-w-sm text-center border border-gray-200">
+          <h2 className="text-2xl font-serif mb-4">Admin Access</h2>
+
+          <input
+            type="password"
+            placeholder="Enter password"
+            className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-rose-300"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button
+            onClick={fetchData}
+            className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 transition"
+          >
+            Enter
+          </button>
+
+          {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // 📊 DASHBOARD (after login)
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-gray-100 px-4 py-10">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <h1 className="text-3xl font-serif text-center mb-8 text-gray-800">
           RSVP Dashboard
         </h1>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatCard title="Total RSVPs" value={data.totalRsvps} />
           <StatCard title="Attending" value={data.attendingCount} />
           <StatCard title="Total Guests" value={data.totalGuests} />
         </div>
 
-        {/* List */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-gray-200">
           {data.items.map((rsvp) => (
-            <div
-              key={rsvp.id}
-              className="border-b py-4 flex justify-between items-center"
-            >
+            <div key={rsvp.id} className="border-b py-4 flex justify-between">
               <div>
-                <p className="font-semibold text-gray-800">{rsvp.name}</p>
+                <p className="font-semibold">{rsvp.name}</p>
                 <p className="text-sm text-gray-500">{rsvp.email}</p>
-                <p className="text-sm text-gray-600">Guests: {rsvp.guests}</p>
               </div>
 
-              <span
-                className={`px-3 py-1 rounded-full text-sm ${
-                  rsvp.attending
-                    ? "bg-green-100 text-green-600"
-                    : "bg-red-100 text-red-500"
-                }`}
-              >
-                {rsvp.attending ? "Attending" : "Not Attending"}
-              </span>
+              <div className="text-sm">
+                {rsvp.attending ? `${rsvp.guests} attending` : "Not attending"}
+              </div>
             </div>
           ))}
         </div>
@@ -62,9 +87,9 @@ export default function AdminRsvps() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-white/80 backdrop-blur-lg rounded-xl p-5 shadow border border-gray-200 text-center">
+    <div className="bg-white/80 backdrop-blur-lg rounded-xl p-5 shadow border text-center">
       <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-2xl font-semibold text-gray-800">{value}</p>
+      <p className="text-2xl font-semibold">{value}</p>
     </div>
   );
 }
