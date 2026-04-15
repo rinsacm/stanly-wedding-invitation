@@ -39,9 +39,11 @@ export default function Invitation() {
   const [form, setForm] = useState(initialState);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-
+  const [mounted, setMounted] = useState(false);
   const countdown = useCountdown("2026-05-25T09:00:00");
-
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -82,35 +84,46 @@ export default function Invitation() {
             Wedding Invitation
           </p>
 
-          <h1 className="text-4xl md:text-5xl font-serif leading-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-serif leading-tight mb-2">
             Stanly <span className="text-[#d4a373]">&</span> Anisha
           </h1>
 
-          <p className="text-gray-600 mb-6">
-            Together with their families, they invite you to celebrate their
-            wedding.
+          <p className="text-sm text-gray-500 mb-6 italic">
+            are getting married
+          </p>
+
+          {/* INVITE TEXT */}
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            With love in our hearts and joy in our souls, we invite you to be a
+            part of our special day as we begin our beautiful journey together.
+          </p>
+
+          {/* QUOTE */}
+          <p className="text-gray-500 italic mb-6 text-sm">
+            “Two souls, one heart, a lifetime of togetherness.”
           </p>
 
           {/* COUNTDOWN */}
           <div className="grid grid-cols-4 gap-3 mb-8 text-center">
-            {[
-              { label: "Days", value: countdown.days },
-              { label: "Hours", value: countdown.hours },
-              { label: "Min", value: countdown.minutes },
-              { label: "Sec", value: countdown.seconds },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="bg-white/60 backdrop-blur-md rounded-xl py-3 shadow-sm"
-              >
-                <div className="text-xl font-semibold text-[#d4a373]">
-                  {item.value}
+            {mounted &&
+              [
+                { label: "Days", value: countdown?.days },
+                { label: "Hours", value: countdown?.hours },
+                { label: "Min", value: countdown?.minutes },
+                { label: "Sec", value: countdown?.seconds },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="bg-white/60 backdrop-blur-md rounded-xl py-3 shadow-sm"
+                >
+                  <div className="text-xl font-semibold text-[#d4a373]">
+                    {item.value}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-gray-500">
+                    {item.label}
+                  </div>
                 </div>
-                <div className="text-[10px] uppercase tracking-wider text-gray-500">
-                  {item.label}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
 
           {/* DETAILS */}
@@ -119,19 +132,58 @@ export default function Invitation() {
               <strong>Date:</strong> May 25, 2026
             </p>
             <p>
-              <strong>Ceremony:</strong> St. Mary's Church
+              <strong>Ceremony:</strong> St. Antony's Church , Manjalampura
             </p>
             <p>
-              <strong>Reception:</strong> The Grand Hall
+              <strong>Reception:</strong> St George Convention Centre,
+              Adakkathode road, Kelakam
             </p>
           </div>
 
-          <div className="mt-8 text-gray-500 text-sm italic">
-            “Your presence is the greatest gift.”
+          {/* MAP */}
+          <div className="mt-6">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Venue 1</p>
+
+            <div className="rounded-xl overflow-hidden shadow-md border">
+              <iframe
+                src="https://maps.google.com/maps?q=st+anthonys+church+manjalampura&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="180"
+                style={{ border: 0 }}
+                loading="lazy"
+              ></iframe>
+            </div>
+
+            <a
+              href="https://maps.google.com/maps?q=st+anthonys+church+manjalampura&t=&z=13&ie=UTF8&iwloc="
+              target="_blank"
+              className="text-xs text-[#d4a373] mt-2 inline-block"
+            >
+              St Antony's Church, Manjalampura - Open in Google Maps →
+            </a>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Venue 2</p>
+
+            <div className="rounded-xl overflow-hidden shadow-md border">
+              <iframe
+                src="https://maps.google.com/maps?q=st+george+convention+adakkathode&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="180"
+                style={{ border: 0 }}
+                loading="lazy"
+              ></iframe>
+            </div>
+
+            <a
+              href="https://maps.google.com/maps?q=st+george+convention+adakkathode&t=&z=13&ie=UTF8&iwloc="
+              target="_blank"
+              className="text-xs text-[#d4a373] mt-2 inline-block"
+            >
+              St George Convention Centre, Adakkathode Open in Google Maps →
+            </a>
           </div>
         </div>
 
-        {/* ---------------- RIGHT SIDE ---------------- */}
+        {/* ---------------- RIGHT SIDE (RSVP) ---------------- */}
         <div className="p-10 bg-white">
           <h2 className="text-2xl font-semibold mb-6">RSVP</h2>
 
