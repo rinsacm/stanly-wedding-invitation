@@ -1,5 +1,9 @@
 import Invitation from "../components/Invitation";
 
 export default function Home() {
-  return <Invitation />;
+  return (
+    <div className="min-h-screen">
+      <Invitation />
+    </div>
+  );
 }

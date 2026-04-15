@@ -1,270 +1,197 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function Invitation({
-  couple = { a: "Stanly", b: "Anisha" },
-  date = "Monday, May 25, 2026",
-  venues = [
-    {
-      title: "VENUE 1",
-      when: "MONDAY, MAY 25, 2026 - ELEVEN O'CLOCK IN THE MORNING",
-      where: "ST. ANTONY'S CHURCH, MANJALAMPURA",
-    },
-    {
-      title: "VENUE 2",
-      when: "MONDAY, MAY 25, 2026",
-      where: "St George Convention Centre, Adakkathode road, Kelakam",
-    },
-  ],
-}) {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    guests: 1,
-    message: "",
-    attending: true,
-  });
-  const [status, setStatus] = useState(null);
+const initialState = {
+  name: "",
+  email: "",
+  guests: 1,
+  attending: true,
+  message: "",
+};
+
+/* ---------------- COUNTDOWN HOOK ---------------- */
+function useCountdown(targetDate) {
+  const calculateTimeLeft = () => {
+    const diff = new Date(targetDate) - new Date();
+
+    return {
+      days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
+      hours: Math.max(0, Math.floor((diff / (1000 * 60 * 60)) % 24)),
+      minutes: Math.max(0, Math.floor((diff / (1000 * 60)) % 60)),
+      seconds: Math.max(0, Math.floor((diff / 1000) % 60)),
+    };
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return timeLeft;
+}
+
+/* ---------------- MAIN COMPONENT ---------------- */
+export default function Invitation() {
+  const [form, setForm] = useState(initialState);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+
+  const countdown = useCountdown("2026-05-25T09:00:00");
+
+  const updateField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   async function submit(e) {
     e.preventDefault();
-    setStatus("loading");
+    setLoading(true);
+    setStatus("");
+
     try {
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (res.ok) {
-        setStatus("success");
-        setForm({
-          name: "",
-          email: "",
-          guests: 1,
-          message: "",
-          attending: true,
-        });
+
+      if (res.status === 409) {
+        setStatus("Email already RSVP'd");
+      } else if (!res.ok) {
+        setStatus("Something went wrong");
       } else {
-        const json = await res.json();
-        setStatus(json?.error || "error");
+        setStatus("RSVP saved ❤️");
+        setForm(initialState);
       }
-    } catch (err) {
-      setStatus("error");
+    } catch {
+      setStatus("Network error");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="container">
-      <div className="card">
-        <div style={{ textAlign: "center", paddingBottom: 10 }}>
-          <div style={{ fontSize: 14, letterSpacing: 2, color: "#cfc6bf" }}>
-            MAY
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f5f2] to-[#fdfaf7] flex items-center justify-center p-6">
+      <div className="max-w-5xl w-full grid md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl bg-white">
+        {/* ---------------- LEFT SIDE ---------------- */}
+        <div className="p-10 flex flex-col justify-center bg-[#f7efe6]">
+          <p className="text-xs tracking-[3px] text-gray-500 uppercase mb-3">
+            Wedding Invitation
+          </p>
+
+          <h1 className="text-4xl md:text-5xl font-serif leading-tight mb-4">
+            Stanly <span className="text-[#d4a373]">&</span> Anisha
+          </h1>
+
+          <p className="text-gray-600 mb-6">
+            Together with their families, they invite you to celebrate their
+            wedding.
+          </p>
+
+          {/* COUNTDOWN */}
+          <div className="grid grid-cols-4 gap-3 mb-8 text-center">
+            {[
+              { label: "Days", value: countdown.days },
+              { label: "Hours", value: countdown.hours },
+              { label: "Min", value: countdown.minutes },
+              { label: "Sec", value: countdown.seconds },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="bg-white/60 backdrop-blur-md rounded-xl py-3 shadow-sm"
+              >
+                <div className="text-xl font-semibold text-[#d4a373]">
+                  {item.value}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-500">
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* DETAILS */}
+          <div className="space-y-2 text-sm text-gray-700">
+            <p>
+              <strong>Date:</strong> May 25, 2026
+            </p>
+            <p>
+              <strong>Ceremony:</strong> St. Mary's Church
+            </p>
+            <p>
+              <strong>Reception:</strong> The Grand Hall
+            </p>
+          </div>
+
+          <div className="mt-8 text-gray-500 text-sm italic">
+            “Your presence is the greatest gift.”
           </div>
         </div>
 
-        <div className="hero">
-          <div className="details" style={{ textAlign: "center" }}>
-            {/* Calendar strip with the 25 highlighted */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 12,
-                alignItems: "center",
-                marginBottom: 12,
-              }}
+        {/* ---------------- RIGHT SIDE ---------------- */}
+        <div className="p-10 bg-white">
+          <h2 className="text-2xl font-semibold mb-6">RSVP</h2>
+
+          <form onSubmit={submit} className="space-y-4">
+            <input
+              className="w-full p-3 border border-gray-200 rounded-lg focus:border-[#d4a373] outline-none"
+              placeholder="Full Name"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              required
+            />
+
+            <input
+              type="email"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:border-[#d4a373] outline-none"
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              required
+            />
+
+            <select
+              className="w-full p-3 border border-gray-200 rounded-lg"
+              value={form.guests}
+              onChange={(e) => updateField("guests", Number(e.target.value))}
             >
-              <div className="small" style={{ width: 36 }}>
-                Fri
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Sat
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Sun
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Mon
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Tue
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Wed
-              </div>
-              <div className="small" style={{ width: 36 }}>
-                Thu
-              </div>
-            </div>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>
+                  {n} {n === 1 ? "Guest" : "Guests"}
+                </option>
+              ))}
+            </select>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "column",
-              }}
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={form.attending}
+                onChange={(e) => updateField("attending", e.target.checked)}
+              />
+              I will attend
+            </label>
+
+            <textarea
+              className="w-full p-3 border border-gray-200 rounded-lg"
+              placeholder="Message (optional)"
+              value={form.message}
+              onChange={(e) => updateField("message", e.target.value)}
+            />
+
+            <button
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#d4a373] to-[#e6c8a0] text-white font-semibold shadow-md hover:opacity-90 transition"
+              disabled={loading}
             >
-              <div
-                style={{
-                  fontSize: 48,
-                  fontWeight: 700,
-                  letterSpacing: 2,
-                  color: "#0b1220",
-                  background: "#f6efe9",
-                  width: 110,
-                  height: 110,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 18,
-                  boxShadow: "0 6px 18px rgba(2,6,23,0.3)",
-                }}
-              >
-                25
-              </div>
-              <div
-                style={{
-                  marginTop: 18,
-                  fontStyle: "italic",
-                  fontFamily: "serif",
-                  fontSize: 20,
-                  color: "#f3e7df",
-                }}
-              >
-                save the date
-              </div>
-              <h1
-                style={{
-                  margin: "12px 0 6px 0",
-                  letterSpacing: 4,
-                  fontSize: 26,
-                }}
-              >
-                {couple.a} & {couple.b}
-              </h1>
-            </div>
+              {loading ? "Saving..." : "Send RSVP"}
+            </button>
 
-            <div
-              style={{ marginTop: 18, textAlign: "center", color: "#9aa6b2" }}
-            >
-              {venues.map((v, i) => {
-                const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.where)}`;
-                return (
-                  <div key={i} style={{ marginBottom: 14 }}>
-                    <div style={{ fontWeight: 700, letterSpacing: 2 }}>
-                      {v.title}
-                    </div>
-                    <div
-                      style={{
-                        textTransform: "uppercase",
-                        fontSize: 13,
-                        marginTop: 6,
-                      }}
-                    >
-                      {v.when}
-                    </div>
-                    <div style={{ marginTop: 6 }}>{v.where}</div>
-                    <div style={{ marginTop: 6 }}>
-                      <a
-                        href={mapUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: "#f6e1d6",
-                          textDecoration: "underline",
-                          fontSize: 13,
-                        }}
-                      >
-                        View on map
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <aside className="meta">
-            <h3 style={{ marginTop: 0 }}>RSVP</h3>
-            <form onSubmit={submit}>
-              <div className="form-row">
-                <input
-                  className="input"
-                  placeholder="Your full name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <input
-                  className="input"
-                  type="email"
-                  placeholder="Email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <select
-                  className="input"
-                  value={form.guests}
-                  onChange={(e) =>
-                    setForm({ ...form, guests: Number(e.target.value) })
-                  }
-                >
-                  <option value={1}>1 guest</option>
-                  <option value={2}>2 guests</option>
-                  <option value={3}>3 guests</option>
-                  <option value={4}>4 guests</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: 10 }}>
-                <label
-                  className="small"
-                  style={{ display: "block", marginBottom: 6 }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.attending}
-                    onChange={(e) =>
-                      setForm({ ...form, attending: e.target.checked })
-                    }
-                  />{" "}
-                  Attending
-                </label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  placeholder="Message (optional)"
-                  value={form.message}
-                  onChange={(e) =>
-                    setForm({ ...form, message: e.target.value })
-                  }
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button className="btn" type="submit">
-                  Send RSVP
-                </button>
-                <div className="small">
-                  {status === "loading"
-                    ? "Sending..."
-                    : status === "success"
-                      ? "Thanks — RSVP saved!"
-                      : status === "error"
-                        ? "Something went wrong"
-                        : ""}
-                </div>
-              </div>
-            </form>
-
-            <div style={{ marginTop: 12 }} className="small">
-              We respect your privacy. RSVP data is stored securely.
-            </div>
-          </aside>
+            {status && (
+              <p className="text-center text-sm text-gray-500 mt-2">{status}</p>
+            )}
+          </form>
         </div>
       </div>
     </div>

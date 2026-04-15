@@ -1,117 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function Admin() {
-  const [password, setPassword] = useState("");
+export default function AdminRsvps() {
   const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
 
-  async function load() {
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/rsvps", {
-        headers: { "x-admin-password": password },
-      });
-      if (!res.ok) {
-        const json = await res.json();
-        setError(json?.error || "Failed");
-        return;
-      }
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      setError("Failed to load");
-    }
-  }
+  useEffect(() => {
+    fetch("/api/rsvps", {
+      headers: {
+        "x-admin-password": "YOUR_PASSWORD",
+      },
+    })
+      .then((res) => res.json())
+      .then(setData);
+  }, []);
+
+  if (!data) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "40px auto" }}>
-      <div style={{ background: "#08121a", padding: 18, borderRadius: 12 }}>
-        <h1 style={{ margin: 0 }}>Admin — RSVPs</h1>
-        <p style={{ color: "#9aa6b2" }}>
-          Enter admin password to view guest responses.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-gray-100 px-4 py-10">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <h1 className="text-3xl font-serif text-center mb-8 text-gray-800">
+          RSVP Dashboard
+        </h1>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <input
-            style={{
-              flex: 1,
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.04)",
-              background: "transparent",
-              color: "inherit",
-            }}
-            placeholder="Admin password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            style={{
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "#e6b89c",
-              border: "none",
-              fontWeight: 700,
-              color: "#08121a",
-            }}
-            onClick={load}
-          >
-            Load RSVPs
-          </button>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <StatCard title="Total RSVPs" value={data.totalRsvps} />
+          <StatCard title="Attending" value={data.attendingCount} />
+          <StatCard title="Total Guests" value={data.totalGuests} />
         </div>
 
-        {error && (
-          <div style={{ marginTop: 12, color: "#f8d7da" }}>{error}</div>
-        )}
+        {/* List */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-gray-200">
+          {data.items.map((rsvp) => (
+            <div
+              key={rsvp.id}
+              className="border-b py-4 flex justify-between items-center"
+            >
+              <div>
+                <p className="font-semibold text-gray-800">{rsvp.name}</p>
+                <p className="text-sm text-gray-500">{rsvp.email}</p>
+                <p className="text-sm text-gray-600">Guests: {rsvp.guests}</p>
+              </div>
 
-        {data && (
-          <div style={{ marginTop: 18 }}>
-            <div style={{ marginBottom: 8, color: "#9aa6b2" }}>
-              Total RSVPs: {data.totalRsvps} — Total guests attending:{" "}
-              {data.totalGuests}
+              <span
+                className={`px-3 py-1 rounded-full text-sm ${
+                  rsvp.attending
+                    ? "bg-green-100 text-green-600"
+                    : "bg-red-100 text-red-500"
+                }`}
+              >
+                {rsvp.attending ? "Attending" : "Not Attending"}
+              </span>
             </div>
-            <div style={{ display: "grid", gap: 10 }}>
-              {data.items.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: "rgba(255,255,255,0.02)",
-                    padding: 12,
-                    borderRadius: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <strong>{item.name}</strong>{" "}
-                      <span style={{ color: "#9aa6b2" }}>({item.email})</span>
-                    </div>
-                    <div style={{ color: "#9aa6b2" }}>
-                      {item.attending
-                        ? `${item.guests} coming`
-                        : "Not attending"}
-                    </div>
-                  </div>
-                  {item.message && (
-                    <div style={{ marginTop: 8, color: "#c9d8e6" }}>
-                      Message: {item.message}
-                    </div>
-                  )}
-                  <div style={{ marginTop: 8, fontSize: 12, color: "#8898a6" }}>
-                    Submitted: {new Date(item.createdAt).toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value }) {
+  return (
+    <div className="bg-white/80 backdrop-blur-lg rounded-xl p-5 shadow border border-gray-200 text-center">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className="text-2xl font-semibold text-gray-800">{value}</p>
     </div>
   );
 }
