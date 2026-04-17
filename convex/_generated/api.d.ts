@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as guests from "../guests.js";
 import type * as rsvp from "../rsvp.js";
 
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  guests: typeof guests;
   rsvp: typeof rsvp;
 }>;
 

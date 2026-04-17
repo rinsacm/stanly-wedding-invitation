@@ -2,12 +2,20 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  rsvps: defineTable({
+  guests: defineTable({
     name: v.string(),
-    email: v.optional(v.string()),
+    guestsAllowed: v.number(),
+    createdAt: v.number(),
+    inviteLink: v.optional(v.string()),
+  }),
+
+  rsvps: defineTable({
+    guestId: v.string(),
+    name: v.string(),
+    email: v.string(),
     guests: v.number(),
     attending: v.boolean(),
-    message: v.optional(v.string()),
+    message: v.string(),
     createdAt: v.number(),
   }),
 });

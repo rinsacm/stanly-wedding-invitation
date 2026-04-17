@@ -1,34 +1,40 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-export const addRsvp = mutation({
+/* ✅ Create RSVP (only once per guest) */
+export const create = mutation({
   args: {
+    guestId: v.string(), // ✅ MUST be here
     name: v.string(),
-    email: v.optional(v.string()),
+    email: v.string(),
     guests: v.number(),
     attending: v.boolean(),
-    message: v.optional(v.string()),
+    message: v.string(),
+    createdAt: v.number(),
   },
-
   handler: async (ctx, args) => {
-    if (args.email) {
-      const existing = await ctx.db
-        .query("rsvps")
-        .filter((q) => q.eq(q.field("email"), args.email))
-        .first();
-
-      if (existing) throw new Error("DUPLICATE");
-    }
-
-    return await ctx.db.insert("rsvps", {
-      ...args,
-      createdAt: Date.now(),
-    });
+    return await ctx.db.insert("rsvps", args);
   },
 });
 
-export const getRsvps = query({
+/* ✅ Get RSVP by guest */
+export const getByGuestId = query({
+  args: {
+    guestId: v.string(), // ✅ ONLY THIS
+  },
+  handler: async (ctx, args) => {
+    const rsvps = await ctx.db
+      .query("rsvps")
+      .filter((q) => q.eq(q.field("guestId"), args.guestId))
+      .collect();
+
+    return rsvps[0] || null;
+  },
+});
+
+/* ✅ Get all RSVPs */
+export const listRsvps = query({
   handler: async (ctx) => {
-    return await ctx.db.query("rsvps").order("desc").collect();
+    return await ctx.db.query("rsvps").collect();
   },
 });
