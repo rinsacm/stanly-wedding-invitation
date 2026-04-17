@@ -28,16 +28,14 @@ function useCountdown(targetDate) {
 export default function CinematicInvitation({ guestName, guestData, guestId }) {
   const [openRSVP, setOpenRSVP] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
     guests: 1,
     attending: true,
-    message: "",
   });
 
-  const countdown = useCountdown("2026-05-25T09:00:00");
+  const countdown = useCountdown("2026-05-25T11:00:00");
 
   /* ---------------- CHECK RSVP ---------------- */
   useEffect(() => {
@@ -70,39 +68,28 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
 
   /* ---------------- SUBMIT ---------------- */
   async function submit() {
-    setLoading(true);
+    const res = await fetch("/api/rsvp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guestId,
+        email: form.email,
+        guests: form.guests,
+        attending: form.attending,
+      }),
+    });
 
-    try {
-      const res = await fetch("/api/rsvp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guestId,
-          email: form.email,
-          guests: form.guests,
-          attending: form.attending,
-          message: form.message,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setSubmitted(true);
-        setOpenRSVP(false);
-      } else {
-        alert(data.error || "Something went wrong");
-      }
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      setSubmitted(true);
+      setOpenRSVP(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen bg-[#f8f5f2] flex flex-col items-center px-6 py-12 overflow-hidden">
+    <div className="relative min-h-screen bg-[#f8f5f2] flex flex-col items-center px-6 py-14 overflow-hidden">
       {/* 🌸 BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(25)].map((_, i) => (
+        {[...Array(20)].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-[#d4a373]/20 rounded-full animate-pulse"
@@ -114,44 +101,39 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
         ))}
       </div>
 
-      {/* 💍 HEADER */}
-      <div className="text-center z-10 mt-10">
-        <p className="text-xs tracking-[5px] uppercase text-gray-500">
-          Wedding Invitation
+      {/* 💌 INTRO */}
+      <div className="text-center z-10 max-w-xl">
+        <p className="text-[#b08968] text-lg">Dear {guestName || "Guest"},</p>
+
+        <p className="mt-4 text-gray-600">
+          We are happy to invite you to our special day.
         </p>
+      </div>
 
-        {guestName && (
-          <p className="mt-3 text-[#b08968] text-lg">Dear {guestName}</p>
-        )}
-
-        <h1 className="text-5xl md:text-6xl font-serif mt-4 text-gray-800">
+      {/* 💍 NAME + STORY */}
+      <div className="text-center mt-10 max-w-2xl z-10">
+        <h1 className="text-5xl font-serif text-gray-800">
           Stanly <span className="text-[#d4a373]">&</span> Anisha
         </h1>
 
-        <p className="mt-3 italic text-gray-500">
-          Two souls. One story. A lifetime begins.
+        <p className="mt-6 text-gray-600">
+          Two hearts came together and built one beautiful story.
         </p>
 
-        {/* 📅 DATE */}
-        <div className="mt-6">
-          <p className="text-xs tracking-[4px] uppercase text-gray-500">
-            Wedding Date
-          </p>
-          <p className="text-2xl font-serif text-[#d4a373] mt-2">25 May 2026</p>
-        </div>
-
-        {/* ⏰ TIME */}
-        <div className="mt-6">
-          <p className="text-xs tracking-[4px] uppercase text-gray-500">Time</p>
-          <p className="text-3xl font-serif text-[#d4a373] mt-2">11:00 AM</p>
-        </div>
+        <p className="mt-3 text-gray-600">
+          Now we are starting a new life together, and we want you with us.
+        </p>
       </div>
 
-      {/* 💌 STORY */}
-      <p className="mt-8 max-w-xl text-center text-gray-600 leading-relaxed">
-        What started as a simple journey became something deeply beautiful. This
-        is not just a wedding — it is the beginning of forever.
-      </p>
+      {/* 📅 DATE + TIME */}
+      <div className="mt-10 text-center">
+        <p className="text-xs uppercase tracking-[4px] text-gray-500">
+          Wedding Date
+        </p>
+        <p className="text-2xl font-serif text-[#d4a373] mt-2">
+          25 May 2026 • 11:00 AM
+        </p>
+      </div>
 
       {/* ⏳ COUNTDOWN */}
       {countdown && (
@@ -165,7 +147,7 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
         </div>
       )}
 
-      {/* 📍 LOCATIONS */}
+      {/* 📍 LOCATIONS (BACK TO SIMPLE CARDS) */}
       <div className="mt-12 space-y-4 text-center z-10">
         <a
           href="https://www.google.com/maps/search/?api=1&query=St+Antony's+Church+Manjalampura"
@@ -186,22 +168,26 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
         </a>
       </div>
 
-      {/* 💖 BUTTON */}
+      {/* 💖 RSVP */}
       {!submitted ? (
         <button
           onClick={() => setOpenRSVP(true)}
           className="mt-12 bg-[#d4a373] text-white px-8 py-3 rounded-full shadow-xl"
         >
-          Are you attending?
+          Will you attend?
         </button>
       ) : (
-        <p className="mt-12 text-[#b08968]">✨ You’ve already responded</p>
+        <p className="mt-12 text-[#b08968]">Thank you for your response 🤍</p>
       )}
 
-      {/* 💌 MODAL */}
+      {/* 💌 RSVP MODAL */}
       {openRSVP && !submitted && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl w-96">
+            <p className="text-center text-sm text-gray-500 mb-4">
+              Please respond
+            </p>
+
             <input
               className="w-full border p-2 rounded mb-2"
               placeholder="Email"
@@ -209,13 +195,14 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
               onChange={(e) => update("email", e.target.value)}
             />
 
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-3">
               <button
                 onClick={() => update("attending", true)}
                 className="flex-1 p-2 bg-[#f1e4d6] rounded"
               >
                 Yes
               </button>
+
               <button
                 onClick={() => update("attending", false)}
                 className="flex-1 p-2 bg-[#f5d6d6] rounded"
@@ -224,11 +211,25 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
               </button>
             </div>
 
+            {form.attending && (
+              <select
+                className="w-full border p-2 rounded mb-3"
+                value={form.guests}
+                onChange={(e) => update("guests", Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n} Guest(s)
+                  </option>
+                ))}
+              </select>
+            )}
+
             <button
               onClick={submit}
               className="w-full bg-[#d4a373] text-white py-2 rounded"
             >
-              {loading ? "Saving..." : "Confirm"}
+              Confirm
             </button>
 
             <button
