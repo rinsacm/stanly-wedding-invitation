@@ -196,11 +196,11 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
       </div>
 
       {/* ⏳ COUNTDOWN */}
-      <div className="mt-10 text-center">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+        {" "}
         <p className="text-xs tracking-[4px] uppercase text-gray-500 font-body">
           Countdown to our wedding ceremony
         </p>
-
         <div className="mt-6 flex items-center justify-center gap-6">
           {[
             { label: "Days", value: countdown.days },
@@ -210,7 +210,15 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
           ].map((item) => (
             <div
               key={item.label}
-              className="flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-2xl px-5 py-4 shadow-sm min-w-[90px]"
+              className="
+        flex flex-col items-center justify-center
+        bg-white/60 backdrop-blur-md
+        rounded-xl sm:rounded-2xl
+        py-2 sm:py-4
+        px-2 sm:px-5
+        shadow-sm
+        min-w-0
+      "
             >
               <AnimatedNumber value={item.value} />
 
