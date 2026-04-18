@@ -134,7 +134,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
     <div className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14">
       {/* 🌸 FLOATING PARTICLES BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(12)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <div
             key={i}
             className="
@@ -142,7 +142,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
         bg-[#d4a373]/20 sm:bg-[#d4a373]/30 
         rounded-full
         animate-float
-        opacity-40 sm:opacity-60
+        opacity-20 sm:opacity-50
       "
             style={{
               top: `${Math.random() * 100}%`,
