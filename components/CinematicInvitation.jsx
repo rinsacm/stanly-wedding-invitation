@@ -46,26 +46,8 @@ function AnimatedNumber({ value }) {
   );
 }
 
-/* ---------------- LOADER ---------------- */
-function Loader() {
-  return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f7f0e8] relative overflow-hidden">
-      <p className="font-wedding text-lg text-gray-700 text-center animate-pulse max-w-xs">
-        Your invitation is being prepared...
-      </p>
-
-      <div className="mt-5 w-32 h-[2px] bg-[#d4a373] rounded-full animate-pulse"></div>
-
-      <p className="text-xs text-gray-400 mt-4 text-center font-body">
-        Please wait a moment ✨
-      </p>
-    </div>
-  );
-}
-
 /* ---------------- MAIN ---------------- */
 export default function WeddingInvitation({ guestName, guestId, guestData }) {
-  const [loading, setLoading] = useState(true);
   const countdown = useCountdown("2026-05-25T11:00:00");
   const [openRSVP, setOpenRSVP] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -123,12 +105,6 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
       setOpenRSVP(false);
     }
   }
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1600);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14">
