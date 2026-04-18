@@ -198,7 +198,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
       {/* ⏳ COUNTDOWN */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
         {" "}
-        <p className="text-xs tracking-[4px] uppercase text-gray-500 font-body">
+        <p className="text-xs tracking-[4px] uppercase text-center text-gray-500 font-body">
           Countdown to our wedding ceremony
         </p>
         <div className="mt-6 flex items-center justify-center gap-6">
