@@ -134,14 +134,21 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
     <div className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14">
       {/* 🌸 FLOATING PARTICLES BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-[#d4a373]/30 rounded-full animate-float"
+            className="
+        absolute w-1.5 h-1.5 sm:w-2 sm:h-2 
+        bg-[#d4a373]/20 sm:bg-[#d4a373]/30 
+        rounded-full
+        animate-float
+        opacity-40 sm:opacity-60
+      "
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              animationDuration: `${5 + Math.random() * 5}s`,
+              animationDuration: `${8 + Math.random() * 6}s`,
+              animationDelay: `${Math.random() * 5}s`,
             }}
           />
         ))}
@@ -196,7 +203,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
       </div>
 
       {/* ⏳ COUNTDOWN */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+      <div className="mt-6 flex flex-wrap flex-col items-center justify-center gap-3 sm:gap-6">
         {" "}
         <p className="text-xs tracking-[4px] uppercase text-center text-gray-500 font-body">
           Countdown to our wedding ceremony
