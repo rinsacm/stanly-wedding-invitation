@@ -113,18 +113,11 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
         {[...Array(15)].map((_, i) => (
           <div
             key={i}
-            className="
-        absolute w-1.5 h-1.5 sm:w-2 sm:h-2 
-        bg-[#d4a373]/20 sm:bg-[#d4a373]/30 
-        rounded-full
-        animate-float
-        opacity-20 sm:opacity-50
-      "
+            className="absolute w-2 h-2 bg-[#d4a373]/30 rounded-full animate-float"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              animationDuration: `${8 + Math.random() * 6}s`,
-              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 5}s`,
             }}
           />
         ))}
