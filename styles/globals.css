@@ -2,6 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 🌸 Google Fonts (KEEP ONLY ONE IMPORT BLOCK) */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap");
+
+/* 💍 Wedding Calligraphy Name */
+.font-name {
+  font-family: "Great Vibes", cursive;
+  font-weight: 400;
+}
+
+/* 📜 Elegant Serif (headings / dates) */
+.font-wedding {
+  font-family: "Cormorant Garamond", serif;
+}
+
+/* ✨ Premium Title Font */
+.font-title {
+  font-family: "Playfair Display", serif;
+}
+
+/* ✍️ Body text */
+.font-body {
+  font-family: "Inter", sans-serif;
+}
+
+/* ✨ Animated writing effect */
+.write-name {
+  font-family: "Great Vibes", cursive;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  animation: fadeWrite 2.5s ease forwards;
+}
+
+@keyframes fadeWrite {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🌸 Floating petals */
+.petal {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #d4a373;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(30px);
+    opacity: 0;
+  }
+}
+
+/* 📱 Full height fix */
 html,
 body,
 #__next {

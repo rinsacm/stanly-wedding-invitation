@@ -1,7 +1,8 @@
 import { getConvexClient } from "../../lib/convexClient";
+import { api } from "../../convex/_generated/api";
 
 export default async function handler(req, res) {
-  // ✅ Allow only POST
+  // ❌ allow only POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -9,24 +10,27 @@ export default async function handler(req, res) {
   try {
     const client = getConvexClient();
 
-    const { guestId, email, guests, attending, message } = req.body;
+    // ✅ safe body handling
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
 
-    // 🔴 1. Validate input
+    const { guestId, email, guests, attending, message } = body;
+
+    // ❌ validation
     if (!guestId) {
       return res.status(400).json({ error: "Missing guestId" });
     }
 
-    // 🔐 2. Fetch guest from DB (SOURCE OF TRUTH)
-    const guest = await client.query("guests:getGuestById", {
+    // ✅ fetch guest
+    const guest = await client.query(api.guests.getGuestById, {
       id: guestId,
     });
 
     if (!guest) {
-      return res.status(403).json({ error: "Invalid invitation link" });
+      return res.status(403).json({ error: "Invalid invite link" });
     }
 
-    // 🚫 3. Prevent duplicate RSVP
-    const existing = await client.query("rsvp:getByGuestId", {
+    // ❌ check duplicate RSVP
+    const existing = await client.query(api.rsvp.getByGuestId, {
       guestId,
     });
 
@@ -34,13 +38,13 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: "Already responded" });
     }
 
-    // ✅ 4. Save RSVP (IMPORTANT: name from DB)
-    await client.mutation("rsvp:create", {
-      guestId,
-      name: guest.name, // ⭐ FIX: add name here
+    // ✅ save RSVP
+    await client.mutation(api.rsvp.create, {
+      guestId: guestId,
+      name: guest.name,
       email: email || "",
       guests: guests || 1,
-      attending: !!attending,
+      attending: attending === true || attending === "true",
       message: message || "",
       createdAt: Date.now(),
     });
@@ -53,7 +57,7 @@ export default async function handler(req, res) {
     console.error("RSVP ERROR:", err);
 
     return res.status(500).json({
-      error: "Server error. Please try again.",
+      error: "Server error",
     });
   }
 }

@@ -7,6 +7,7 @@ export default defineSchema({
     guestsAllowed: v.number(),
     createdAt: v.number(),
     inviteLink: v.optional(v.string()),
+    customMessage: v.optional(v.string()),
   }),
 
   rsvps: defineTable({

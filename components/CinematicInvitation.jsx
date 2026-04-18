@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-
+import { motion, AnimatePresence } from "framer-motion";
 /* ---------------- COUNTDOWN ---------------- */
 function useCountdown(targetDate) {
-  const [timeLeft, setTimeLeft] = useState(null);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   useEffect(() => {
     const calculate = () => {
@@ -18,14 +23,50 @@ function useCountdown(targetDate) {
 
     setTimeLeft(calculate());
     const interval = setInterval(() => setTimeLeft(calculate()), 1000);
+
     return () => clearInterval(interval);
   }, [targetDate]);
 
   return timeLeft;
 }
+function AnimatedNumber({ value }) {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={value}
+        initial={{ opacity: 0, y: 8, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.9 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="text-4xl font-wedding text-[#b08968]"
+      >
+        {value}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/* ---------------- LOADER ---------------- */
+function Loader() {
+  return (
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f7f0e8] relative overflow-hidden">
+      <p className="font-wedding text-lg text-gray-700 text-center animate-pulse max-w-xs">
+        Your invitation is being prepared...
+      </p>
+
+      <div className="mt-5 w-32 h-[2px] bg-[#d4a373] rounded-full animate-pulse"></div>
+
+      <p className="text-xs text-gray-400 mt-4 text-center font-body">
+        Please wait a moment ✨
+      </p>
+    </div>
+  );
+}
 
 /* ---------------- MAIN ---------------- */
-export default function CinematicInvitation({ guestName, guestData, guestId }) {
+export default function WeddingInvitation({ guestName, guestId, guestData }) {
+  const [loading, setLoading] = useState(true);
+  const countdown = useCountdown("2026-05-25T11:00:00");
   const [openRSVP, setOpenRSVP] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -35,9 +76,24 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
     attending: true,
   });
 
-  const countdown = useCountdown("2026-05-25T11:00:00");
+  const update = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+  useEffect(() => {
+    async function load() {
+      if (!guestId) return;
 
-  /* ---------------- CHECK RSVP ---------------- */
+      const res = await fetch(`/api/guest?id=${guestId}`);
+      const data = await res.json();
+
+      setGuestData(data);
+    }
+
+    load();
+  }, [guestId]);
   useEffect(() => {
     async function check() {
       if (!guestId) return;
@@ -47,26 +103,9 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
 
       if (data.exists) setSubmitted(true);
     }
+
     check();
   }, [guestId]);
-
-  /* ---------------- AUTO FILL ---------------- */
-  useEffect(() => {
-    if (guestData) {
-      setForm((p) => ({
-        ...p,
-        guests: guestData.guestsAllowed || 1,
-      }));
-    }
-  }, [guestData]);
-
-  const update = (k, v) =>
-    setForm((p) => ({
-      ...p,
-      [k]: v,
-    }));
-
-  /* ---------------- SUBMIT ---------------- */
   async function submit() {
     const res = await fetch("/api/rsvp", {
       method: "POST",
@@ -84,110 +123,169 @@ export default function CinematicInvitation({ guestName, guestData, guestId }) {
       setOpenRSVP(false);
     }
   }
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <Loader />;
 
   return (
-    <div className="relative min-h-screen bg-[#f8f5f2] flex flex-col items-center px-6 py-14 overflow-hidden">
-      {/* 🌸 BACKGROUND */}
-      <div className="absolute inset-0 pointer-events-none">
+    <div className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14">
+      {/* 🌸 FLOATING PARTICLES BACKGROUND */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-[#d4a373]/20 rounded-full animate-pulse"
+            className="absolute w-2 h-2 bg-[#d4a373]/30 rounded-full animate-float"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
+              animationDuration: `${5 + Math.random() * 5}s`,
             }}
           />
         ))}
       </div>
-
-      {/* 💌 INTRO */}
-      <div className="text-center z-10 max-w-xl">
-        <p className="text-[#b08968] text-lg">Dear {guestName || "Guest"},</p>
-
-        <p className="mt-4 text-gray-600">
-          We are happy to invite you to our special day.
+      {/* 💌 HEADER */}
+      <p className="text-[#a67c52] text-lg mt-6 font-wedding text-center">
+        With love, we are writing this just for you {guestName} 🤍
+      </p>
+      {/* ✨ MESSAGE */}
+      {guestData?.customMessage ? (
+        <p className="mt-5 text-center text-gray-600 max-w-md font-wedding leading-relaxed">
+          {guestData.customMessage}
         </p>
-      </div>
+      ) : (
+        <p className="mt-5 text-center text-gray-600 max-w-md font-wedding leading-relaxed">
+          It would mean so much to have you with us as we begin this new chapter
+          of our lives together
+        </p>
+      )}
+      {/* 💍 NAMES */}
+      <div className="mt-10 text-center">
+        <p className="text-xs tracking-[4px] text-gray-500 uppercase font-body">
+          We are getting married
+        </p>
 
-      {/* 💍 NAME + STORY */}
-      <div className="text-center mt-10 max-w-2xl z-10">
-        <h1 className="text-5xl font-serif text-gray-800">
-          Stanly <span className="text-[#d4a373]">&</span> Anisha
+        <h1 className="mt-3">
+          <span className="block font-display text-6xl text-[#b08968]">
+            Stanly
+          </span>
+
+          <span className="text-2xl text-[#d4a373]">&</span>
+
+          <span className="block font-display text-6xl text-[#b08968]">
+            Anisha
+          </span>
         </h1>
 
-        <p className="mt-6 text-gray-600">
-          Two hearts came together and built one beautiful story.
-        </p>
-
-        <p className="mt-3 text-gray-600">
-          Now we are starting a new life together, and we want you with us.
+        <p className="mt-3 text-sm text-gray-500 font-body italic">
+          Two hearts. One promise. A lifetime ahead.
         </p>
       </div>
 
-      {/* 📅 DATE + TIME */}
+      {/* 📅 DATE */}
       <div className="mt-10 text-center">
-        <p className="text-xs uppercase tracking-[4px] text-gray-500">
-          Wedding Date
+        <p className="text-xs tracking-[4px] text-gray-500 uppercase font-body">
+          Save the Date
         </p>
-        <p className="text-2xl font-serif text-[#d4a373] mt-2">
+
+        <p className="font-wedding text-3xl text-[#b08968] mt-2">
           25 May 2026 • 11:00 AM
         </p>
       </div>
 
       {/* ⏳ COUNTDOWN */}
-      {countdown && (
-        <div className="flex gap-6 mt-10">
-          {Object.entries(countdown).map(([k, v]) => (
-            <div key={k} className="text-center">
-              <div className="text-3xl font-serif text-[#d4a373]">{v}</div>
-              <div className="text-xs uppercase text-gray-500">{k}</div>
+      <div className="mt-10 text-center">
+        <p className="text-xs tracking-[4px] uppercase text-gray-500 font-body">
+          Countdown to our wedding ceremony
+        </p>
+
+        <div className="mt-6 flex items-center justify-center gap-6">
+          {[
+            { label: "Days", value: countdown.days },
+            { label: "Hours", value: countdown.hours },
+            { label: "Minutes", value: countdown.minutes },
+            { label: "Seconds", value: countdown.seconds },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-2xl px-5 py-4 shadow-sm min-w-[90px]"
+            >
+              <AnimatedNumber value={item.value} />
+
+              <div className="text-[10px] tracking-[3px] uppercase text-gray-500 mt-1 font-body">
+                {item.label}
+              </div>
             </div>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* 📍 LOCATIONS (BACK TO SIMPLE CARDS) */}
-      <div className="mt-12 space-y-4 text-center z-10">
+      {/* 📍 VENUE (INVITATION + LINKS BALANCED) */}
+      <div className="mt-14 w-full max-w-md text-center z-10">
+        <p className="text-sm text-gray-600 font-wedding leading-relaxed">
+          With the blessings of our families, we warmly invite you to our
+          wedding celebrations.
+        </p>
+
+        {/* CEREMONY */}
+        <p className="mt-8 text-gray-500 text-sm">
+          The wedding ceremony will be held at
+        </p>
+
+        <p className="font-serif text-lg text-[#b08968] mt-2">
+          St Antony's Church
+        </p>
+
+        <p className="text-sm text-gray-600">Manjalampura</p>
+
         <a
           href="https://www.google.com/maps/search/?api=1&query=St+Antony's+Church+Manjalampura"
           target="_blank"
-          className="block border rounded-2xl p-4 w-72 mx-auto bg-white/70"
+          className="text-xs text-[#d4a373] mt-2 inline-block underline"
         >
-          <p className="font-semibold">St Antony's Church</p>
-          <p className="text-xs text-gray-500">Manjalampura</p>
+          Open in Google Maps
         </a>
+
+        <p className="text-xs text-gray-500 mt-1">11:00 AM</p>
+
+        {/* divider */}
+        <div className="my-6 w-24 h-[1px] bg-[#d4a373]/40 mx-auto"></div>
+
+        {/* RECEPTION */}
+        <p className="text-gray-500 text-sm">Followed by a reception at</p>
+
+        <p className="font-serif text-lg text-[#b08968] mt-2">
+          St George Convention Centre
+        </p>
+
+        <p className="text-sm text-gray-600">Adakkathode Road, Kelakam</p>
 
         <a
           href="https://www.google.com/maps/search/?api=1&query=St+George+Convention+Centre+Kelakam"
           target="_blank"
-          className="block border rounded-2xl p-4 w-72 mx-auto bg-white/70"
+          className="text-xs text-[#d4a373] mt-2 inline-block underline"
         >
-          <p className="font-semibold">St George Convention Centre</p>
-          <p className="text-xs text-gray-500">Kelakam</p>
+          Open in Google Maps
         </a>
       </div>
-
-      {/* 💖 RSVP */}
+      {/* 💖 RSVP BUTTON */}
+      {/* 💖 RSVP BUTTON */}
       {!submitted ? (
         <button
           onClick={() => setOpenRSVP(true)}
-          className="mt-12 bg-[#d4a373] text-white px-8 py-3 rounded-full shadow-xl"
+          className="mt-10 bg-[#d4a373] text-white px-6 py-2 rounded-full shadow"
         >
-          Will you attend?
+          Kindly let us know if you can join us
         </button>
       ) : (
-        <p className="mt-12 text-[#b08968]">Thank you for your response 🤍</p>
+        <p className="mt-10 text-[#b08968]">Thank you for your response 🤍</p>
       )}
-
-      {/* 💌 RSVP MODAL */}
       {openRSVP && !submitted && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl w-96">
-            <p className="text-center text-sm text-gray-500 mb-4">
-              Please respond
-            </p>
-
+            {/* form fields */}
             <input
               className="w-full border p-2 rounded mb-2"
               placeholder="Email"

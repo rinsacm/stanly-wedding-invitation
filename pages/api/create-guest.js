@@ -2,7 +2,7 @@ import { getConvexClient } from "../../lib/convexClient";
 
 export default async function handler(req, res) {
   try {
-    const { name, guestsAllowed = 2 } = req.body;
+    const { name, guestsAllowed = 2, customMessage } = req.body;
 
     const client = getConvexClient();
 
@@ -10,6 +10,7 @@ export default async function handler(req, res) {
     const id = await client.mutation("guests:addGuest", {
       name,
       guestsAllowed,
+      customMessage,
     });
 
     // 2️⃣ generate link
