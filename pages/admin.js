@@ -9,6 +9,9 @@ export default function Admin() {
   const [rsvps, setRsvps] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // 🔍 SEARCH STATE (NEW)
+  const [search, setSearch] = useState("");
+
   // 🗑 DELETE MODAL STATE
   const [deleteId, setDeleteId] = useState(null);
   const [deleteName, setDeleteName] = useState("");
@@ -40,13 +43,11 @@ export default function Admin() {
     navigator.clipboard.writeText(text);
   }
 
-  // 🗑 OPEN DELETE MODAL
   function openDelete(g) {
     setDeleteId(g._id);
     setDeleteName(g.name);
   }
 
-  // 🗑 CONFIRM DELETE
   async function confirmDelete() {
     try {
       await fetch("/api/admin/guests", {
@@ -67,9 +68,13 @@ export default function Admin() {
     }
   }
 
-  // 📊 SAFE DATA
+  // 📊 SAFE + FILTERED DATA
   const data = useMemo(() => {
     const safeGuests = Array.isArray(guests) ? guests : [];
+
+    const filtered = safeGuests.filter((g) =>
+      g.name.toLowerCase().includes(search.toLowerCase()),
+    );
 
     const attending = [];
     const pending = [];
@@ -77,7 +82,7 @@ export default function Admin() {
 
     let totalPersons = 0;
 
-    safeGuests.forEach((g) => {
+    filtered.forEach((g) => {
       const r = getRsvp(g._id);
 
       if (!r) {
@@ -97,9 +102,8 @@ export default function Admin() {
       totalPersons,
       totalInvites: safeGuests.length,
     };
-  }, [guests, rsvps]);
+  }, [guests, rsvps, search]);
 
-  // ================= CARD =================
   const Card = ({ g, type }) => {
     const r = getRsvp(g._id);
 
@@ -148,7 +152,6 @@ export default function Admin() {
     );
   };
 
-  // ================= BOX =================
   const Box = ({ title, value }) => (
     <div className="bg-white p-4 rounded-xl shadow-sm text-center">
       <p className="text-xs text-gray-500">{title}</p>
@@ -165,11 +168,11 @@ export default function Admin() {
           <p className="text-sm text-gray-500">Stanly & Anisha</p>
         </div>
 
-        {/* NAVIGATION */}
+        {/* NAV */}
         <div className="flex justify-center gap-3 mb-6">
           <button
             onClick={() => setPage("guests")}
-            className={`px-5 py-2 rounded-full text-sm ${
+            className={`px-5 py-2 rounded-full ${
               page === "guests" ? "bg-[#d4a373] text-white" : "bg-white border"
             }`}
           >
@@ -178,7 +181,7 @@ export default function Admin() {
 
           <button
             onClick={() => setPage("generator")}
-            className={`px-5 py-2 rounded-full text-sm ${
+            className={`px-5 py-2 rounded-full ${
               page === "generator"
                 ? "bg-[#d4a373] text-white"
                 : "bg-white border"
@@ -192,7 +195,7 @@ export default function Admin() {
         {page === "guests" && (
           <>
             {/* LOGIN */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-4">
               <input
                 type="password"
                 placeholder="Admin password"
@@ -206,6 +209,17 @@ export default function Admin() {
               >
                 {loading ? "Loading..." : "Load"}
               </button>
+            </div>
+
+            {/* 🔍 SEARCH BAR (NEW) */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search guest name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full p-3 border rounded-xl bg-white"
+              />
             </div>
 
             {/* SUMMARY */}
