@@ -1,7 +1,9 @@
+"use client";
+
 import { useState, useMemo } from "react";
 
 export default function Admin() {
-  const [page, setPage] = useState("guests"); // 👈 navigation
+  const [page, setPage] = useState("guests");
   const [password, setPassword] = useState("");
   const [guests, setGuests] = useState([]);
   const [rsvps, setRsvps] = useState([]);
@@ -30,26 +32,41 @@ export default function Admin() {
     return rsvps.find((x) => x.guestId === id);
   }
 
+  function copy(text) {
+    navigator.clipboard.writeText(text);
+  }
+
+  // ✅ CLEAN LOGIC (guests = total persons)
   const data = useMemo(() => {
     const attending = [];
     const pending = [];
     const notComing = [];
 
+    let totalPersons = 0;
+
     guests.forEach((g) => {
       const r = getRsvp(g._id);
 
-      if (!r) pending.push(g);
-      else if (r.attending) attending.push(g);
-      else notComing.push(g);
+      if (!r) {
+        pending.push(g);
+      } else if (r.attending) {
+        attending.push(g);
+        totalPersons += Number(r.guests) || 1;
+      } else {
+        notComing.push(g);
+      }
     });
 
-    return { attending, pending, notComing };
+    return {
+      attending,
+      pending,
+      notComing,
+      totalPersons,
+      totalInvites: guests.length,
+    };
   }, [guests, rsvps]);
 
-  function copy(text) {
-    navigator.clipboard.writeText(text);
-  }
-
+  // ✅ CARD
   const Card = ({ g, type }) => {
     const r = getRsvp(g._id);
 
@@ -64,8 +81,11 @@ export default function Admin() {
             {type === "not" && "Not attending"}
           </p>
 
-          {r?.guests && type === "attending" && (
-            <p className="text-xs text-gray-600 mt-1">Guests: {r.guests}</p>
+          {/* ✅ Guests = total persons */}
+          {r?.attending && (
+            <p className="text-xs text-gray-600 mt-1">
+              Guests: {Number(r.guests) || 1}
+            </p>
           )}
         </div>
 
@@ -88,6 +108,14 @@ export default function Admin() {
       </div>
     );
   };
+
+  // ✅ SUMMARY BOX
+  const Box = ({ title, value }) => (
+    <div className="bg-white p-4 rounded-xl shadow-sm text-center">
+      <p className="text-xs text-gray-500">{title}</p>
+      <p className="text-lg font-semibold">{value}</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#f8f5f2] p-6 flex justify-center">
@@ -121,7 +149,6 @@ export default function Admin() {
           </button>
         </div>
 
-        {/* PAGE 1: GUEST LIST */}
         {page === "guests" && (
           <>
             {/* LOGIN */}
@@ -141,7 +168,15 @@ export default function Admin() {
               </button>
             </div>
 
-            {/* GROUPS */}
+            {/* ✅ TOP SUMMARY */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <Box title="Total Invites" value={data.totalInvites} />
+              <Box title="Pending Responses" value={data.pending.length} />
+              <Box title="Persons Attending" value={data.totalPersons} />
+              <Box title="Not Attending" value={data.notComing.length} />
+            </div>
+
+            {/* ATTENDING */}
             <h2 className="font-serif text-[#b08968] mb-2">Attending</h2>
             <div className="space-y-3 mb-6">
               {data.attending.map((g) => (
@@ -149,6 +184,7 @@ export default function Admin() {
               ))}
             </div>
 
+            {/* PENDING */}
             <h2 className="font-serif text-gray-600 mb-2">Not Responded</h2>
             <div className="space-y-3 mb-6">
               {data.pending.map((g) => (
@@ -156,6 +192,7 @@ export default function Admin() {
               ))}
             </div>
 
+            {/* NOT ATTENDING */}
             <h2 className="font-serif text-gray-500 mb-2">Not Attending</h2>
             <div className="space-y-3">
               {data.notComing.map((g) => (
@@ -165,7 +202,6 @@ export default function Admin() {
           </>
         )}
 
-        {/* PAGE 2: INVITATION GENERATOR */}
         {page === "generator" && (
           <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
             <h2 className="text-2xl font-serif text-gray-800">
