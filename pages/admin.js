@@ -9,7 +9,7 @@ export default function Admin() {
   const [rsvps, setRsvps] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ DELETE MODAL STATE
+  // 🗑 DELETE MODAL STATE
   const [deleteId, setDeleteId] = useState(null);
   const [deleteName, setDeleteName] = useState("");
 
@@ -25,13 +25,8 @@ export default function Admin() {
         headers: { password },
       }).then((r) => r.json());
 
-      // ✅ SAFE PARSING (fixes your crash issue)
       setGuests(Array.isArray(g) ? g : g?.guests || []);
       setRsvps(r?.items || []);
-    } catch (err) {
-      console.error(err);
-      setGuests([]);
-      setRsvps([]);
     } finally {
       setLoading(false);
     }
@@ -64,6 +59,7 @@ export default function Admin() {
       });
 
       setGuests((prev) => prev.filter((g) => g._id !== deleteId));
+
       setDeleteId(null);
       setDeleteName("");
     } catch (err) {
@@ -71,7 +67,7 @@ export default function Admin() {
     }
   }
 
-  // ✅ SAFE DATA (fixes forEach crash)
+  // 📊 SAFE DATA
   const data = useMemo(() => {
     const safeGuests = Array.isArray(guests) ? guests : [];
 
@@ -169,18 +165,30 @@ export default function Admin() {
           <p className="text-sm text-gray-500">Stanly & Anisha</p>
         </div>
 
-        {/* NAV */}
+        {/* NAVIGATION */}
         <div className="flex justify-center gap-3 mb-6">
           <button
             onClick={() => setPage("guests")}
-            className={`px-5 py-2 rounded-full ${
+            className={`px-5 py-2 rounded-full text-sm ${
               page === "guests" ? "bg-[#d4a373] text-white" : "bg-white border"
             }`}
           >
             👥 Guest List
           </button>
+
+          <button
+            onClick={() => setPage("generator")}
+            className={`px-5 py-2 rounded-full text-sm ${
+              page === "generator"
+                ? "bg-[#d4a373] text-white"
+                : "bg-white border"
+            }`}
+          >
+            💌 Invitation Generator
+          </button>
         </div>
 
+        {/* ================= GUEST PAGE ================= */}
         {page === "guests" && (
           <>
             {/* LOGIN */}
@@ -230,6 +238,26 @@ export default function Admin() {
               ))}
             </div>
           </>
+        )}
+
+        {/* ================= GENERATOR PAGE ================= */}
+        {page === "generator" && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
+            <h2 className="text-2xl font-serif text-gray-800">
+              💌 Invitation Generator
+            </h2>
+
+            <p className="text-sm text-gray-500 mt-2">
+              Create and share personalized wedding invites
+            </p>
+
+            <button
+              onClick={() => (window.location.href = "/generator")}
+              className="mt-5 px-6 py-3 bg-[#d4a373] text-white rounded-xl"
+            >
+              Open Generator
+            </button>
+          </div>
         )}
 
         {/* 🗑 DELETE MODAL */}
