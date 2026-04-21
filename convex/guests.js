@@ -49,3 +49,13 @@ export const updateGuestLink = mutation({
     });
   },
 });
+/* ---------------- DELETE GUEST ---------------- */
+export const deleteGuest = mutation({
+  args: {
+    id: v.id("guests"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return true;
+  },
+});

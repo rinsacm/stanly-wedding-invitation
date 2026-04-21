@@ -9,6 +9,10 @@ export default function Admin() {
   const [rsvps, setRsvps] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ✅ DELETE MODAL STATE
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteName, setDeleteName] = useState("");
+
   async function load() {
     setLoading(true);
 
@@ -21,8 +25,13 @@ export default function Admin() {
         headers: { password },
       }).then((r) => r.json());
 
-      setGuests(g);
-      setRsvps(r.items || []);
+      // ✅ SAFE PARSING (fixes your crash issue)
+      setGuests(Array.isArray(g) ? g : g?.guests || []);
+      setRsvps(r?.items || []);
+    } catch (err) {
+      console.error(err);
+      setGuests([]);
+      setRsvps([]);
     } finally {
       setLoading(false);
     }
@@ -36,15 +45,43 @@ export default function Admin() {
     navigator.clipboard.writeText(text);
   }
 
-  // ✅ CLEAN LOGIC (guests = total persons)
+  // 🗑 OPEN DELETE MODAL
+  function openDelete(g) {
+    setDeleteId(g._id);
+    setDeleteName(g.name);
+  }
+
+  // 🗑 CONFIRM DELETE
+  async function confirmDelete() {
+    try {
+      await fetch("/api/admin/guests", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          password,
+        },
+        body: JSON.stringify({ id: deleteId }),
+      });
+
+      setGuests((prev) => prev.filter((g) => g._id !== deleteId));
+      setDeleteId(null);
+      setDeleteName("");
+    } catch (err) {
+      alert("Failed to delete invite");
+    }
+  }
+
+  // ✅ SAFE DATA (fixes forEach crash)
   const data = useMemo(() => {
+    const safeGuests = Array.isArray(guests) ? guests : [];
+
     const attending = [];
     const pending = [];
     const notComing = [];
 
     let totalPersons = 0;
 
-    guests.forEach((g) => {
+    safeGuests.forEach((g) => {
       const r = getRsvp(g._id);
 
       if (!r) {
@@ -62,11 +99,11 @@ export default function Admin() {
       pending,
       notComing,
       totalPersons,
-      totalInvites: guests.length,
+      totalInvites: safeGuests.length,
     };
   }, [guests, rsvps]);
 
-  // ✅ CARD
+  // ================= CARD =================
   const Card = ({ g, type }) => {
     const r = getRsvp(g._id);
 
@@ -81,7 +118,6 @@ export default function Admin() {
             {type === "not" && "Not attending"}
           </p>
 
-          {/* ✅ Guests = total persons */}
           {r?.attending && (
             <p className="text-xs text-gray-600 mt-1">
               Guests: {Number(r.guests) || 1}
@@ -89,13 +125,13 @@ export default function Admin() {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <a
             href={g.inviteLink}
             target="_blank"
             className="text-xs px-3 py-1 rounded-lg bg-[#f7efe6] text-[#b08968]"
           >
-            View Invite
+            View
           </a>
 
           <button
@@ -104,12 +140,19 @@ export default function Admin() {
           >
             Copy
           </button>
+
+          <button
+            onClick={() => openDelete(g)}
+            className="text-xs px-3 py-1 rounded-lg bg-red-100 text-red-600"
+          >
+            Delete
+          </button>
         </div>
       </div>
     );
   };
 
-  // ✅ SUMMARY BOX
+  // ================= BOX =================
   const Box = ({ title, value }) => (
     <div className="bg-white p-4 rounded-xl shadow-sm text-center">
       <p className="text-xs text-gray-500">{title}</p>
@@ -126,26 +169,15 @@ export default function Admin() {
           <p className="text-sm text-gray-500">Stanly & Anisha</p>
         </div>
 
-        {/* NAVIGATION */}
+        {/* NAV */}
         <div className="flex justify-center gap-3 mb-6">
           <button
             onClick={() => setPage("guests")}
-            className={`px-5 py-2 rounded-full text-sm ${
+            className={`px-5 py-2 rounded-full ${
               page === "guests" ? "bg-[#d4a373] text-white" : "bg-white border"
             }`}
           >
             👥 Guest List
-          </button>
-
-          <button
-            onClick={() => setPage("generator")}
-            className={`px-5 py-2 rounded-full text-sm ${
-              page === "generator"
-                ? "bg-[#d4a373] text-white"
-                : "bg-white border"
-            }`}
-          >
-            💌 Invitation Generator
           </button>
         </div>
 
@@ -168,7 +200,7 @@ export default function Admin() {
               </button>
             </div>
 
-            {/* ✅ TOP SUMMARY */}
+            {/* SUMMARY */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <Box title="Total Invites" value={data.totalInvites} />
               <Box title="Pending Responses" value={data.pending.length} />
@@ -176,24 +208,22 @@ export default function Admin() {
               <Box title="Not Attending" value={data.notComing.length} />
             </div>
 
-            {/* ATTENDING */}
-            <h2 className="font-serif text-[#b08968] mb-2">Attending</h2>
+            {/* LISTS */}
+            <h2 className="mb-2 font-semibold">🎉 Attending</h2>
             <div className="space-y-3 mb-6">
               {data.attending.map((g) => (
                 <Card key={g._id} g={g} type="attending" />
               ))}
             </div>
 
-            {/* PENDING */}
-            <h2 className="font-serif text-gray-600 mb-2">Not Responded</h2>
+            <h2 className="mb-2 font-semibold">⏳ Not Responded</h2>
             <div className="space-y-3 mb-6">
               {data.pending.map((g) => (
                 <Card key={g._id} g={g} type="pending" />
               ))}
             </div>
 
-            {/* NOT ATTENDING */}
-            <h2 className="font-serif text-gray-500 mb-2">Not Attending</h2>
+            <h2 className="mb-2 font-semibold">❌ Not Attending</h2>
             <div className="space-y-3">
               {data.notComing.map((g) => (
                 <Card key={g._id} g={g} type="not" />
@@ -202,22 +232,35 @@ export default function Admin() {
           </>
         )}
 
-        {page === "generator" && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
-            <h2 className="text-2xl font-serif text-gray-800">
-              💌 Invitation Generator
-            </h2>
+        {/* 🗑 DELETE MODAL */}
+        {deleteId && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+            <div className="bg-white w-full max-w-sm p-5 rounded-2xl shadow-xl text-center">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Delete Invite?
+              </h2>
 
-            <p className="text-sm text-gray-500 mt-2">
-              Create and share personalized wedding invites
-            </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Delete invite for{" "}
+                <span className="font-semibold">{deleteName}</span>?
+              </p>
 
-            <button
-              onClick={() => (window.location.href = "/generator")}
-              className="mt-5 px-6 py-3 bg-[#d4a373] text-white rounded-xl"
-            >
-              Open Generator
-            </button>
+              <div className="flex gap-3 mt-5">
+                <button
+                  onClick={() => setDeleteId(null)}
+                  className="flex-1 py-2 rounded-xl bg-gray-100"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-2 rounded-xl bg-red-500 text-white"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
