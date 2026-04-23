@@ -1,5 +1,8 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
 /* ---------------- COUNTDOWN ---------------- */
 function useCountdown(targetDate) {
   const [timeLeft, setTimeLeft] = useState({
@@ -29,6 +32,8 @@ function useCountdown(targetDate) {
 
   return timeLeft;
 }
+
+/* ---------------- ANIMATED NUMBER ---------------- */
 function AnimatedNumber({ value }) {
   return (
     <AnimatePresence mode="wait">
@@ -45,70 +50,44 @@ function AnimatedNumber({ value }) {
     </AnimatePresence>
   );
 }
+function Loader() {
+  return (
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f7f0e8] relative overflow-hidden">
+      <p className="font-wedding text-lg text-gray-700 text-center animate-pulse max-w-xs">
+        Opening your invitation...
+      </p>
 
+      <div className="mt-5 w-32 h-[2px] bg-[#d4a373] rounded-full animate-pulse"></div>
+
+      <p className="text-xs text-gray-400 mt-4 text-center font-body">
+        Please wait a moment ✨
+      </p>
+    </div>
+  );
+}
 /* ---------------- MAIN ---------------- */
-export default function WeddingInvitation({ guestName, guestId, guestData }) {
+export default function GeneralInvitation() {
   const countdown = useCountdown("2026-05-25T11:00:00");
-  const [openRSVP, setOpenRSVP] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [form, setForm] = useState({
-    email: "",
-    guests: 1,
-    attending: true,
-  });
-
-  const update = (key, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+  /* LOADER */
   useEffect(() => {
-    async function load() {
-      if (!guestId) return;
+    const timer = setTimeout(() => setLoading(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
-      const res = await fetch(`/api/guest?id=${guestId}`);
-      const data = await res.json();
-
-      setGuestData(data);
-    }
-
-    load();
-  }, [guestId]);
-  useEffect(() => {
-    async function check() {
-      if (!guestId) return;
-
-      const res = await fetch(`/api/check-rsvp?guestId=${guestId}`);
-      const data = await res.json();
-
-      if (data.exists) setSubmitted(true);
-    }
-
-    check();
-  }, [guestId]);
-  async function submit() {
-    const res = await fetch("/api/rsvp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        guestId,
-        email: form.email,
-        guests: form.guests,
-        attending: form.attending,
-      }),
-    });
-
-    if (res.ok) {
-      setSubmitted(true);
-      setOpenRSVP(false);
-    }
+  if (loading) {
+    return <Loader />;
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14">
-      {/* 🌸 FLOATING PARTICLES BACKGROUND */}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="min-h-screen bg-[#f8f1ea] flex flex-col items-center px-6 py-14"
+    >
+      {/* 🌸 FLOATING PARTICLES */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {[...Array(15)].map((_, i) => (
           <div
@@ -122,21 +101,18 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
           />
         ))}
       </div>
+
       {/* 💌 HEADER */}
       <p className="text-[#a67c52] text-lg mt-6 font-wedding text-center">
-        With love, we are writing this just for you {guestName} 🤍
+        With love, we invite you to celebrate with us 🤍
       </p>
+
       {/* ✨ MESSAGE */}
-      {guestData?.customMessage ? (
-        <p className="mt-5 text-center text-gray-600 max-w-md font-wedding leading-relaxed">
-          {guestData.customMessage}
-        </p>
-      ) : (
-        <p className="mt-5 text-center text-gray-600 max-w-md font-wedding leading-relaxed">
-          It would mean so much to have you with us as we begin this new chapter
-          of our lives together
-        </p>
-      )}
+      <p className="mt-5 text-center text-gray-600 max-w-md font-wedding leading-relaxed">
+        It would mean so much to have you with us as we begin this new chapter
+        of our lives together
+      </p>
+
       {/* 💍 NAMES */}
       <div className="mt-10 text-center">
         <p className="text-xs tracking-[4px] text-gray-500 uppercase font-body">
@@ -172,11 +148,11 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
       </div>
 
       {/* ⏳ COUNTDOWN */}
-      <div className="mt-6 flex flex-wrap flex-col items-center justify-center gap-3 sm:gap-6">
-        {" "}
+      <div className="mt-6 flex flex-col items-center">
         <p className="text-xs tracking-[4px] uppercase text-center text-gray-500 font-body">
           Countdown to our wedding ceremony
         </p>
+
         <div className="mt-6 flex items-center justify-center gap-6">
           {[
             { label: "Days", value: countdown.days },
@@ -186,15 +162,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
           ].map((item) => (
             <div
               key={item.label}
-              className="
-        flex flex-col items-center justify-center
-        bg-white/60 backdrop-blur-md
-        rounded-xl sm:rounded-2xl
-        py-2 sm:py-4
-        px-2 sm:px-5
-        shadow-sm
-        min-w-0
-      "
+              className="flex flex-col items-center bg-white/60 backdrop-blur-md rounded-2xl py-4 px-5 shadow-sm"
             >
               <AnimatedNumber value={item.value} />
 
@@ -206,7 +174,7 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
         </div>
       </div>
 
-      {/* 📍 VENUE (INVITATION + LINKS BALANCED) */}
+      {/* 📍 VENUE */}
       <div className="mt-14 w-full max-w-md text-center z-10">
         <p className="text-sm text-gray-600 font-wedding leading-relaxed">
           With the blessings of our families, we warmly invite you to our
@@ -254,75 +222,11 @@ export default function WeddingInvitation({ guestName, guestId, guestData }) {
           Open in Google Maps
         </a>
       </div>
-      {/* 💖 RSVP BUTTON */}
-      {/* 💖 RSVP BUTTON */}
-      {!submitted ? (
-        <button
-          onClick={() => setOpenRSVP(true)}
-          className="mt-10 bg-[#d4a373] text-white px-6 py-2 rounded-full shadow"
-        >
-          Kindly let us know if you can join us
-        </button>
-      ) : (
-        <p className="mt-10 text-[#b08968]">Thank you for your response 🤍</p>
-      )}
-      {openRSVP && !submitted && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl w-96">
-            {/* form fields */}
-            <input
-              className="w-full border p-2 rounded mb-2"
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-            />
 
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => update("attending", true)}
-                className="flex-1 p-2 bg-[#f1e4d6] rounded"
-              >
-                Yes
-              </button>
-
-              <button
-                onClick={() => update("attending", false)}
-                className="flex-1 p-2 bg-[#f5d6d6] rounded"
-              >
-                No
-              </button>
-            </div>
-
-            {form.attending && (
-              <select
-                className="w-full border p-2 rounded mb-3"
-                value={form.guests}
-                onChange={(e) => update("guests", Number(e.target.value))}
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n} Guest(s)
-                  </option>
-                ))}
-              </select>
-            )}
-
-            <button
-              onClick={submit}
-              className="w-full bg-[#d4a373] text-white py-2 rounded"
-            >
-              Confirm
-            </button>
-
-            <button
-              onClick={() => setOpenRSVP(false)}
-              className="w-full text-xs text-gray-400 mt-3"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* 💖 FOOTER */}
+      <p className="mt-10 text-[#b08968]">
+        We look forward to celebrating with you 🤍
+      </p>
+    </motion.div>
   );
 }
